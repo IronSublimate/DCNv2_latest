@@ -4,10 +4,6 @@
 #include <ATen/ATen.h>
 //#include <ATen/cuda/CUDAContext.h>
 
-#include <TH/TH.h>
-//#include <THC/THCAtomics.cuh>
-//#include <THC/THCDeviceUtils.cuh>
-
 //extern THCState *state;
 
 // author: Charles Shang
@@ -60,7 +56,7 @@ dcn_v2_cpu_forward(const at::Tensor &input,
     const int height_out = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
     const int width_out = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
 
-    auto ones = at::ones({height_out, width_out}, input.options());
+    auto ones = at::ones({bias.sizes()[0], height_out, width_out}, input.options());
     auto columns = at::empty({channels * kernel_h * kernel_w, 1 * height_out * width_out}, input.options());
     auto output = at::empty({batch, channels_out, height_out, width_out}, input.options());
 
@@ -142,8 +138,8 @@ std::vector<at::Tensor> dcn_v2_cpu_backward(const at::Tensor &input,
                                              int deformable_group)
 {
 
-    THArgCheck(input.is_contiguous(), 1, "input tensor has to be contiguous");
-    THArgCheck(weight.is_contiguous(), 2, "weight tensor has to be contiguous");
+    TORCH_CHECK_ARG(input.is_contiguous(), 1, "input tensor has to be contiguous");
+    TORCH_CHECK_ARG(weight.is_contiguous(), 2, "weight tensor has to be contiguous");
 
     /*AT_ASSERTM(input.type().is_cuda(), "input must be a CUDA tensor");
     AT_ASSERTM(weight.type().is_cuda(), "weight must be a CUDA tensor");
